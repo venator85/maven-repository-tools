@@ -1,10 +1,11 @@
-/** 
+/**
  * Copyright simpligility technologies inc. http://www.simpligility.com
  * Licensed under Eclipse Public License - v 1.0 http://www.eclipse.org/legal/epl-v10.html
  */
 package com.simpligility.maven.provisioner;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,11 +16,15 @@ public class Configuration
     @Parameter( names = { "-h", "-help" }, help = true, description = "Display the help information." )
     private boolean help;
 
-    @Parameter( names = { "-s", "-sourceUrl" }, 
-                description = 
-                "URL for the source repository from which artifacts are resolved, "
-              + "example for a Nexus install is http://localhost:8081/content/groups/public" )
-    private String sourceUrl = "https://repo1.maven.org/maven2";
+    @Parameter( names = { "-s", "-sourceUrl" }, variableArity = true,
+            description = "URL for the source repository from which artifacts are resolved, example for a Nexus"
+                    + " install is http://localhost:8081/content/groups/public" )
+    private List<String> sourceUrl = new ArrayList<String>( )
+    {
+        {
+            add( "https://repo1.maven.org/maven2" );
+        }
+    };
 
     @Parameter( names = { "-t", "-targetUrl" }, 
                 description = "Folder or URL for the target repository e.g. dist-repo or "
@@ -76,7 +81,7 @@ public class Configuration
             + "deployments of a second execution are logged.", arity = 1  )
     private Boolean verifyOnly = false;
 
-    public void setSourceUrl( String sourceUrl )
+    public void setSourceUrl( List<String> sourceUrl )
     {
         this.sourceUrl = sourceUrl;
     }
@@ -141,7 +146,7 @@ public class Configuration
         return help;
     }
 
-    public String getSourceUrl()
+    public List<String> getSourceUrl()
     {
         return sourceUrl;
     }

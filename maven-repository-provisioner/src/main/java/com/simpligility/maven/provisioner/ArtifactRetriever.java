@@ -55,7 +55,7 @@ public class ArtifactRetriever
 
     private File repositoryPath;
 
-    private RemoteRepository sourceRepository;
+    private List<RemoteRepository> sourceRepositories;
     
     private final TreeSet<String> successfulRetrievals = new TreeSet<String>();
 
@@ -74,13 +74,18 @@ public class ArtifactRetriever
         session = RepositoryHandler.getRepositorySystemSession( system, repositoryPath );
     }
 
-    public void retrieve( List<String> artifactCoordinates, String sourceUrl, boolean includeSources,
-                         boolean includeJavadoc, boolean includeProvidedScope,
-                         boolean includeTestScope, boolean includeRuntimeScope )
+    public void retrieve( List<String> artifactCoordinates, List<String> sourceUrls, boolean includeSources,
+                          boolean includeJavadoc, boolean includeProvidedScope,
+                          boolean includeTestScope, boolean includeRuntimeScope )
     {
-        RemoteRepository.Builder builder = new RemoteRepository.Builder( "central", "default", sourceUrl );
-        builder.setProxy( ProxyHelper.getProxy( sourceUrl ) );
-        sourceRepository = builder.build();
+        sourceRepositories = new ArrayList<>();
+        for ( int i = 0; i < sourceUrls.size(); i++ )
+        {
+            String sourceUrl = sourceUrls.get( i );
+            RemoteRepository.Builder builder = new RemoteRepository.Builder( "repo" + i, "default", sourceUrl );
+            builder.setProxy( ProxyHelper.getProxy( sourceUrl ) );
+            sourceRepositories.add( builder.build() );
+        }
 
         getArtifactResults( artifactCoordinates, includeProvidedScope, includeTestScope, includeRuntimeScope );
 
@@ -146,7 +151,10 @@ public class ArtifactRetriever
         {
             CollectRequest collectRequest = new CollectRequest();
             collectRequest.setRoot( new Dependency( artifact, JavaScopes.COMPILE ) );
-            collectRequest.addRepository( sourceRepository );
+            for ( RemoteRepository repository : sourceRepositories )
+            {
+                collectRequest.addRepository( repository );
+            }
 
             DependencyRequest dependencyRequest = new DependencyRequest( collectRequest, depFilter );
 
@@ -285,7 +293,10 @@ public class ArtifactRetriever
         // avoid download if we got it locally already? or not bother and just get it again? 
         ArtifactRequest artifactRequest = new ArtifactRequest();
         artifactRequest.setArtifact( artifact );
-        artifactRequest.addRepository( sourceRepository );
+        for ( RemoteRepository repository : sourceRepositories )
+        {
+            artifactRequest.addRepository( repository );
+        }
 
         try
         {
@@ -300,7 +311,7 @@ public class ArtifactRetriever
             {
               logger.info( "Ignoring failure to retrieve " + gav + " with " + packaging + " and " + classifier );
             }
-            logger.info( "ArtifactResolutionException when retrieving " + gav + " with " + classifier );
+            logger.info( "ArtifactResolutionException when retrieving " + gav + " with " + classifier, e );
             failedRetrievals.add( e.getMessage() );
         }
     }
