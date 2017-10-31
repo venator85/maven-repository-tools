@@ -59,6 +59,6 @@ public final class MavenConstants
      */
     public static boolean packagingUsesJar( String packaging )
     {
-      return ( packagingUsesJarOnly( packaging ) || packagingUsesAdditionalJar( packaging ) );
+      return ( packagingUsesJarOnly( packaging ) );
     }
 }
